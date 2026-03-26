@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
+  <title>StoryWeave - বাংলা চটি গল্প | ডার্ক/লাইট মোড</title>
+ 
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+ 
+  <style>
+    /* CSS Variables for Light/Dark Mode */
+    :root {
+      --light-bg: #f8fafc;
+      --light-surface: #ffffff;
+      --light-text: #000000;
+      --light-text-secondary: #475569;
+      --light-border: #e2e8f0;
+      --light-blue: #2563eb;
+      --light-blue-hover: #1d4ed8;
+      --light-shadow: rgba(37, 99, 235, 0.1);
+      
+      --dark-bg: #000000;
+      --dark-surface: #0a0a0a;
+      --dark-text: #ffffff;
+      --dark-text-secondary: #a3a3a3;
+      --dark-border: #1f1f1f;
+      --dark-blue: #ff0000;
+      --dark-blue-hover: #3b82f6;
+      --dark-shadow: rgba(37, 99, 235, 0.2);
+      
+      --border-radius: 28px;
+      --border-radius-sm: 20px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    /* Default Dark Theme */
+    [data-theme='dark'] {
+      --bg: var(--dark-bg);
+      --surface: var(--dark-surface);
+      --text: var(--dark-text);
+      --text2: var(--dark-text-secondary);
+      --border: var(--dark-border);
+      --accent: var(--dark-blue);
+      --accent-h: var(--dark-blue-hover);
+      --shadow: var(--dark-shadow);
+      --input-bg: #1f1f1f;
+      --toggle-bg: #2d2d2d;
+      --user-bg: #ff0000;
+      --user-text: #fff;
+      --ai-bg: #0a0a0a;
+      --ai-text: #fff;
+      --ai-border: #1f1f1f;
+    }
+    
+    /* Light Theme */
+    [data-theme='light'] {
+      --bg: var(--light-bg);
+      --surface: var(--light-surface);
+      --text: var(--light-text);
+      --text2: var(--light-text-secondary);
+      --border: var(--light-border);
+      --accent: var(--light-blue);
+      --accent-h: var(--light-blue-hover);
+      --shadow: var(--light-shadow);
+      --input-bg: #f1f5f9;
+      --toggle-bg: #e2e8f0;
+      --user-bg: #2563eb;
+      --user-text: #fff;
+      --ai-bg: #ffffff;
+      --ai-text: #000000;
+      --ai-border: #e2e8f0;
+    }
+    
+    /* Apply Global Variables */
+    body {
+      font-family: 'Hind Siliguri', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      transition: var(--transition);
+      overflow-x: hidden;
+      width: 100%;
+    }
+    
+    /* Navbar, Cards, Inputs dynamic theming */
+    nav, footer, .bg-zinc-900, .bg-zinc-800, .bg-zinc-950 {
+      transition: var(--transition);
+    }
+    
+    /* Override Tailwind classes with CSS variables */
+    .bg-zinc-900 { background-color: var(--surface) !important; }
+    .bg-zinc-800 { background-color: var(--input-bg) !important; }
+    .bg-zinc-950 { background-color: var(--bg) !important; }
+    .border-zinc-800 { border-color: var(--border) !important; }
+    .border-zinc-700 { border-color: var(--border) !important; }
+    .text-zinc-100 { color: var(--text) !important; }
+    .text-zinc-400, .text-zinc-500 { color: var(--text2) !important; }
+    .text-zinc-300 { color: var(--text) !important; opacity: 0.9; }
+    .bg-red-600 { background-color: var(--accent) !important; }
+    .bg-red-600:hover { background-color: var(--accent-h) !important; }
+    .hover\:text-red-400:hover { color: var(--accent) !important; }
+    .text-red-400 { color: var(--accent) !important; }
+    .text-red-500 { color: var(--accent) !important; }
+    .bg-red-900\/60 { background-color: var(--accent) !important; opacity: 0.2; }
+    .shadow-2xl, .shadow-md { box-shadow: 0 10px 25px -5px var(--shadow), 0 8px 10px -6px var(--shadow); }
+    
+    /* Story card hover */
+    .story-card { transition: var(--transition); }
+    .story-card:hover { transform: translateY(-6px); }
+    .story-card:active { transform: scale(0.98); }
+    .story-card { background-color: var(--surface) !important; border-color: var(--border) !important; }
+    
+    /* Modal theming */
+    #story-modal, .bg-zinc-950\/95 { background-color: var(--bg) !important; backdrop-filter: blur(8px); }
+    .bg-zinc-900\/70, .bg-zinc-800\/70 { background-color: var(--surface) !important; }
+    .prose-invert { color: var(--text); }
+    
+    /* Toggle Switch Styling */
+    .theme-toggle {
+      position: relative;
+      display: inline-block;
+      width: 52px;
+      height: 28px;
+      margin-left: 12px;
+      cursor: pointer;
+    }
+    .theme-toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: var(--toggle-bg);
+      transition: 0.3s;
+      border-radius: 34px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 22px;
+      width: 22px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: 0.3s;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    input:checked + .slider:before {
+      transform: translateX(24px);
+    }
+    .slider .fa-sun, .slider .fa-moon {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 12px;
+      color: #fbbf24;
+      pointer-events: none;
+    }
+    .slider .fa-sun { left: 6px; opacity: 0; }
+    .slider .fa-moon { right: 6px; opacity: 1; }
+    input:checked + .slider .fa-sun { opacity: 1; }
+    input:checked + .slider .fa-moon { opacity: 0; }
+    
+    .line-clamp-4 { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+    .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .hero-slide { transition: opacity 0.9s ease-in-out; }
+    .hero-text { text-shadow: 0 4px 20px rgba(0,0,0,0.8); background: linear-gradient(135deg, rgba(0,0,0,0.4), rgba(0,0,0,0.6)); backdrop-filter: blur(3px); padding: 0.5rem 1.2rem; border-radius: 2rem; display: inline-block; }
+    @media (max-width: 640px) {
+      .hero-text h2 { font-size: 1.3rem !important; white-space: nowrap; overflow-x: auto; }
+      .hero-text h2::-webkit-scrollbar { display: none; }
+    }
+    .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+    @media (max-width: 640px) {
+      .nav-container { flex-direction: column; align-items: stretch !important; }
+      .search-wrapper { margin: 0.5rem 0; width: 100%; }
+      .action-buttons { justify-content: space-between; width: 100%; }
+    }
+  </style>
+</head>
+<body data-theme="dark" class="min-h-screen flex flex-col antialiased">
+
+  <!-- Navbar with Theme Toggle -->
+  <nav class="sticky top-0 z-50 shadow-lg" style="background-color: var(--surface); border-bottom: 1px solid var(--border);">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 md:py-4">
+      <div class="nav-container flex flex-wrap md:flex-nowrap items-center justify-between gap-3">
+        <div onclick="navigateTo('home')" class="flex items-center gap-2 md:gap-3 cursor-pointer shrink-0">
+          <span class="text-3xl md:text-4xl">🔥</span>
+          <div>
+            <h1 class="text-xl md:text-2xl font-bold tracking-tight" style="color: var(--text);">StoryWeave</h1>
+            <p class="text-[11px] md:text-xs -mt-0.5" style="color: var(--accent);">বাংলা চটি গল্প</p>
+          </div>
+        </div>
+        
+        <!-- Theme Toggle - Logo এর ঠিক ডান পাশে -->
+        <div class="flex items-center gap-2">
+          <label class="theme-toggle">
+            <input type="checkbox" id="theme-toggle-checkbox" onchange="toggleTheme()">
+            <span class="slider">
+              <i class="fas fa-sun"></i>
+              <i class="fas fa-moon"></i>
+            </span>
+          </label>
+        </div>
+
+        <div class="search-wrapper flex-1 w-full md:max-w-md mx-0 md:mx-4 order-3 md:order-2 mt-2 md:mt-0">
+          <div class="relative">
+            <input id="search-input" type="text" placeholder="গল্প বা ট্যাগ সার্চ করুন..." 
+                   class="w-full rounded-2xl px-5 py-2.5 md:py-3 pl-11 text-sm focus:outline-none focus:ring-1 transition"
+                   style="background-color: var(--input-bg); border: 1px solid var(--border); color: var(--text);">
+            <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-sm" style="color: var(--text2);"></i>
+          </div>
+        </div>
+
+        <div class="action-buttons flex items-center justify-between md:justify-end gap-3 md:gap-5 w-full md:w-auto order-2 md:order-3">
+          <button onclick="navigateTo('home')" class="text-sm md:text-base transition px-2 py-1" style="color: var(--text);">হোম</button>
+          <button onclick="navigateTo('stories')" class="text-sm md:text-base transition px-2 py-1" style="color: var(--text);">সব গল্প</button>
+          <button onclick="navigateTo('favorites')" class="flex items-center gap-1.5 text-sm md:text-base transition" style="color: var(--text);">
+            <i class="fas fa-heart" style="color: var(--accent);"></i> <span class="hidden sm:inline">সেভ</span>
+          </button>
+          <button onclick="navigateTo('create')" class="px-4 md:px-5 py-1.5 md:py-2 rounded-2xl text-xs md:text-sm font-semibold shadow-md transition active:scale-95" style="background-color: var(--accent); color: white;">গল্প লিখুন</button>
+          <button onclick="checkAdminAccess()" class="text-sm md:text-base px-1 transition" style="color: var(--text2);"><i class="fas fa-user-shield"></i></button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div id="main-content" class="max-w-7xl mx-auto px-4 sm:px-6 py-6 md:py-8 flex-1 w-full"></div>
+
+  <!-- Footer -->
+<footer class="border-t py-8 md:py-10 mt-auto safe-bottom" style="background-color: var(--surface); border-color: var(--border);">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 text-sm">
+      <div class="col-span-2 md:col-span-1">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="text-2xl md:text-3xl">🔥</span>
+          <h2 class="text-xl md:text-2xl font-bold" style="color: var(--text);">StoryWeave</h2>
+        </div>
+        <p style="color: var(--text2);" class="text-xs md:text-sm">বাংলা চটি গল্পের সেরা সংগ্রহ</p>
+      </div>
+      <div>
+        <h3 class="font-semibold mb-3 text-sm md:text-base" style="color: var(--accent);">কুইক লিঙ্ক</h3>
+        <div class="space-y-2" style="color: var(--text2);">
+          <p onclick="navigateTo('home')" class="cursor-pointer hover:opacity-80 transition">হোম</p>
+          <p onclick="navigateTo('stories')" class="cursor-pointer hover:opacity-80 transition">সব গল্প</p>
+          <p onclick="navigateTo('favorites')" class="cursor-pointer hover:opacity-80 transition">সেভ করা গল্প</p>
+        </div>
+      </div>
+      <div>
+        <h3 class="font-semibold mb-3 text-sm md:text-base" style="color: var(--accent);">সোশ্যাল</h3>
+        <div class="flex gap-5 text-xl md:text-2xl" style="color: var(--text2);">
+          <a href="https://www.facebook.com/storyweavexxx" target="_blank" rel="noopener noreferrer" class="hover:opacity-80 transition"><i class="fab fa-facebook"></i></a>
+          <a href="https://t.me/storyweavexxx" target="_blank" rel="noopener noreferrer" class="hover:opacity-80 transition"><i class="fab fa-telegram"></i></a>
+          <a href="mailto:story.weave.xxx@gmail.com" class="hover:opacity-80 transition"><i class="fas fa-envelope"></i></a>
+        </div>
+      </div>
+      <div class="text-[11px] md:text-xs text-right md:text-left" style="color: var(--text2);">© 2026 StoryWeave</div>
+    </div>
+  </div>
+</footer>
+
+  <!-- Story Modal -->
+  <div id="story-modal" class="hidden fixed inset-0 z-[200] overflow-y-auto" style="background-color: var(--bg);">
+    <div class="max-w-3xl mx-auto px-4 py-6 md:py-8 min-h-screen">
+      <div class="sticky top-0 flex justify-between items-center pb-4 mb-4 border-b z-10" style="background-color: var(--bg); border-color: var(--border);">
+        <button onclick="hideStoryModal()" class="text-3xl md:text-4xl transition p-2 -ml-2" style="color: var(--text);">×</button>
+        <button onclick="toggleFavorite()" id="fav-btn" class="text-3xl md:text-4xl p-2 transition active:scale-90">❤️</button>
+      </div>
+      <h1 id="modal-title" class="text-2xl md:text-4xl font-bold mb-3 md:mb-6 leading-tight" style="color: var(--text);"></h1>
+      <div id="modal-author" class="text-sm md:text-base mb-6 md:mb-10" style="color: var(--accent);"></div>
+      <div id="modal-content" class="prose prose-invert prose-sm md:prose-lg leading-relaxed whitespace-pre-wrap mb-10 text-base md:text-lg" style="color: var(--text);"></div>
+      
+      <div class="rounded-2xl md:rounded-3xl p-5 md:p-6 shadow-xl mb-8" style="background-color: var(--surface);">
+        <h3 class="text-lg md:text-xl font-semibold mb-5 flex items-center gap-2" style="color: var(--text);"><i class="far fa-comment-dots" style="color: var(--accent);"></i> মন্তব্য</h3>
+        <div id="comments-list" class="mb-6 space-y-4 max-h-96 overflow-y-auto pr-1"></div>
+        <div class="flex flex-col sm:flex-row gap-3">
+          <input id="comment-input" type="text" placeholder="মন্তব্য লিখুন..." class="flex-1 rounded-2xl px-5 py-3 md:py-4 text-sm focus:outline-none focus:ring-1" style="background-color: var(--input-bg); border: 1px solid var(--border); color: var(--text);">
+          <button onclick="postComment()" class="px-6 md:px-8 py-3 rounded-2xl font-semibold transition active:scale-95" style="background-color: var(--accent); color: white;">পোস্ট</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast container -->
+  <div id="toast-container" class="fixed bottom-5 right-4 left-4 sm:left-auto sm:right-6 z-[300] flex flex-col gap-2 max-w-sm ml-auto"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  
+  <script>
+    // Theme Management
+    function toggleTheme() {
+      const currentTheme = document.body.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.body.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+      
+      // Update toggle checkbox state
+      const checkbox = document.getElementById('theme-toggle-checkbox');
+      if (checkbox) checkbox.checked = (newTheme === 'light');
+      
+      // Refresh current view to apply new theme colors properly
+      refreshCurrentView();
+    }
+    
+    function loadTheme() {
+      const savedTheme = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = savedTheme || (prefersDark ? 'dark' : 'light');
+      document.body.setAttribute('data-theme', theme);
+      const checkbox = document.getElementById('theme-toggle-checkbox');
+      if (checkbox) checkbox.checked = (theme === 'light');
+    }
+    
+    function refreshCurrentView() {
+      const currentPage = window.currentPage || 'home';
+      navigateTo(currentPage);
+    }
+    
+    // Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyD15P13T3iQbPV-jY1ETwu-VBuNK8DQm58",
+      authDomain: "storyweave-10406.firebaseapp.com",
+      projectId: "storyweave-10406",
+      storageBucket: "storyweave-10406.firebasestorage.app",
+      messagingSenderId: "917026805091",
+      appId: "1:917026805091:web:3d7cca953045f8c534af56"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const ADMIN_PASSWORD = "admin123";
+    let currentStoryId = null;
+    let currentCategoryFilter = '';
+    let currentSlide = 0;
+    let slideInterval;
+    let currentPage = 'home';
+
+    let allCategories = ["বউ","শালী","ভাবি","মামী","পিসি","মাসী","কাকী","মা-ছেলে","অজাচার","বাবা-মেয়ে","ভাই-বোন","শাশুড়ি","বউমা-শ্বশুর","দেবর-ভাবি","জামাই-শাশুড়ি","প্রতিবেশী","অফিস","কলেজ ছাত্রী","টিচার","কাজের মেয়ে","গৃহবধূ","পরকীয়া","গ্রুপ সেক্স","হাউসওয়াইফ","ফ্যান্টাসি","রেলওয়ে","হোটেল","ডাক্তার","পুটকি","ভোদা","গুদ চোদা","পোদ মারা","চোদাচুদি","খানকি","মাগী","বান্ধবী"];
+
+    const heroImages = [
+      "images/slider1.jpg",
+      "images/slider2.jpg",
+      "images/slider3.jpg",
+      "images/slider4.jpg",
+      "images/slider5.jpg"
+    ];
+
+    function showToast(msg, type = "success") {
+      const container = document.getElementById("toast-container");
+      const toast = document.createElement("div");
+      toast.className = `px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-sm font-medium transition-all`;
+      toast.style.backgroundColor = type === "success" ? "#10b981" : "#ef4444";
+      toast.style.color = "white";
+      toast.innerHTML = `<i class="fas ${type === "success" ? "fa-check-circle" : "fa-times-circle"} text-base"></i> <span>${msg}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => { toast.style.opacity = "0"; setTimeout(() => toast.remove(), 300); }, 3800);
+    }
+
+    function getFavorites() { return JSON.parse(localStorage.getItem("favorites") || "[]"); }
+    function toggleFavorite() {
+      if (!currentStoryId) return;
+      let favs = getFavorites();
+      if (favs.includes(currentStoryId)) favs = favs.filter(id => id !== currentStoryId);
+      else favs.push(currentStoryId);
+      localStorage.setItem("favorites", JSON.stringify(favs));
+      updateFavButton();
+      showToast(favs.includes(currentStoryId) ? "গল্প সেভ হয়েছে ❤️" : "সেভ সরানো হয়েছে", "success");
+    }
+    function updateFavButton() {
+      const btn = document.getElementById("fav-btn");
+      if (btn) btn.innerHTML = getFavorites().includes(currentStoryId) ? `<i class="fas fa-heart" style="color: var(--accent);"></i>` : `<i class="far fa-heart" style="color: var(--text);"></i>`;
+    }
+
+    function navigateTo(page) {
+      currentPage = page;
+      if (page === 'home') renderHome();
+      else if (page === 'stories') renderStories();
+      else if (page === 'favorites') renderFavorites();
+      else if (page === 'create') renderCreateForm();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Hero Slider
+    function createHeroSlider() {
+      return `<div class="relative w-full rounded-2xl md:rounded-3xl overflow-hidden mb-8 md:mb-12 shadow-2xl" style="aspect-ratio: 16/9; max-height: 480px;">
+        <div id="slides" class="relative w-full h-full"></div>
+        <div class="absolute inset-0 flex items-center justify-center z-20 pointer-events-none px-4">
+          <div class="text-center hero-text rounded-full px-4 py-2 md:px-6 md:py-3">
+            <h2 class="text-2xl sm:text-4xl md:text-6xl font-bold tracking-wide text-white">🔥 বাংলা চটি গল্প 🔥</h2>
+          </div>
+        </div>
+        <button onclick="prevSlide()" class="absolute left-2 md:left-6 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 p-2 md:p-4 rounded-full text-2xl md:text-4xl z-30 transition">‹</button>
+        <button onclick="nextSlide()" class="absolute right-2 md:right-6 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 p-2 md:p-4 rounded-full text-2xl md:text-4xl z-30 transition">›</button>
+        <div id="slide-indicators" class="absolute bottom-3 md:bottom-6 left-1/2 flex gap-2 md:gap-3 -translate-x-1/2 z-30"></div>
+      </div>`;
+    }
+
+    function renderHeroSlider() {
+      const container = document.getElementById("slides");
+      const indicators = document.getElementById("slide-indicators");
+      if (!container || !indicators) return;
+      container.innerHTML = ""; indicators.innerHTML = "";
+      heroImages.forEach((src, i) => {
+        const slide = document.createElement("div");
+        slide.className = `absolute inset-0 hero-slide ${i === 0 ? 'opacity-100' : 'opacity-0'}`;
+        slide.innerHTML = `<img src="${src}" class="w-full h-full object-cover" onerror="this.src='https://picsum.photos/id/${100+i}/1200/600'" alt="Slider ${i+1}">`;
+        container.appendChild(slide);
+        const dot = document.createElement("button");
+        dot.className = `w-2 h-2 md:w-4 md:h-4 rounded-full transition-all ${i === 0 ? 'bg-red-600 scale-125' : 'bg-white/60'}`;
+        dot.onclick = () => { currentSlide = i; updateSlides(); };
+        indicators.appendChild(dot);
+      });
+      if (slideInterval) clearInterval(slideInterval);
+      slideInterval = setInterval(() => { currentSlide = (currentSlide + 1) % heroImages.length; updateSlides(); }, 5000);
+    }
+
+    function updateSlides() {
+      const slides = document.querySelectorAll("#slides > div");
+      const dots = document.querySelectorAll("#slide-indicators button");
+      slides.forEach((s, i) => s.style.opacity = i === currentSlide ? '1' : '0');
+      dots.forEach((d, i) => d.className = `transition-all ${i === currentSlide ? 'bg-red-600 scale-125 w-3 h-3 md:w-4 md:h-4' : 'bg-white/60 w-2 h-2 md:w-3 md:h-3'}`);
+    }
+    function nextSlide() { currentSlide = (currentSlide + 1) % heroImages.length; updateSlides(); }
+    function prevSlide() { currentSlide = (currentSlide - 1 + heroImages.length) % heroImages.length; updateSlides(); }
+
+    function createStoryCard(doc, container) {
+      const s = doc.data();
+      const card = document.createElement("div");
+      card.className = "story-card rounded-2xl md:rounded-3xl overflow-hidden cursor-pointer border shadow-md";
+      card.style.backgroundColor = "var(--surface)";
+      card.style.borderColor = "var(--border)";
+      card.innerHTML = `
+        <div class="h-40 sm:h-48 md:h-52 flex items-center justify-center text-5xl md:text-6xl" style="background: linear-gradient(135deg, var(--surface), var(--input-bg));">📖</div>
+        <div class="p-4 md:p-6">
+          <span class="inline-block px-3 py-1 text-[11px] md:text-xs rounded-full mb-2 md:mb-3" style="background-color: var(--accent); color: white; opacity: 0.8;">${s.category || 'অন্যান্য'}</span>
+          <h3 class="font-semibold text-base md:text-xl mb-2 line-clamp-2 leading-tight" style="color: var(--text);">${s.title}</h3>
+          <p class="text-xs md:text-sm line-clamp-4 mb-4" style="color: var(--text2);">${(s.content || "").substring(0, 120)}...</p>
+          <div class="flex justify-between text-[10px] md:text-xs" style="color: var(--text2);">
+            <span><i class="far fa-user-circle"></i> Anonymous</span>
+            <span><i class="far fa-eye"></i> ${s.views || 0} বার</span>
+          </div>
+        </div>
+      `;
+      card.onclick = () => readStory(doc.id);
+      container.appendChild(card);
+    }
+
+    async function renderHome() {
+      const content = document.getElementById("main-content");
+      content.innerHTML = `
+        <div class="text-center mb-6 md:mb-8">
+          <h1 class="text-3xl md:text-5xl font-bold mb-2" style="background: linear-gradient(135deg, var(--accent), var(--accent-h)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">স্বাগতম StoryWeave-এ 🔥</h1>
+          <p style="color: var(--text2);" class="text-sm md:text-base">বাংলা চটি গল্পের সেরা সংগ্রহ</p>
+        </div>
+        ${createHeroSlider()}
+        <h2 class="text-xl md:text-3xl font-bold mb-5 mt-6 flex items-center gap-2" style="color: var(--text);"><i class="fas fa-clock" style="color: var(--accent);"></i> সাম্প্রতিক গল্প</h2>
+        <div id="home-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6"></div>
+      `;
+      renderHeroSlider();
+      const grid = document.getElementById("home-grid");
+      grid.innerHTML = `<div class="col-span-3 py-16 text-center"><i class="fas fa-spinner fa-pulse"></i> লোড হচ্ছে...</div>`;
+      try {
+        const snapshot = await db.collection("stories").orderBy("createdAt", "desc").limit(6).get();
+        grid.innerHTML = "";
+        if (snapshot.empty) { grid.innerHTML = `<p class="col-span-3 text-center py-20" style="color: var(--text2);">এখনো কোনো গল্প নেই। গল্প লিখুন!</p>`; return; }
+        snapshot.forEach(doc => createStoryCard(doc, grid));
+      } catch (e) { grid.innerHTML = `<p class="col-span-3 text-center py-20" style="color: var(--accent);">গল্প লোড করতে সমস্যা হয়েছে</p>`; }
+    }
+
+    // Other functions (renderStories, readStory, etc.) remain same as before but with theme support
+    // For brevity, I'll include the essential ones - the full code is in previous version
+    
+    // Placeholder for remaining functions - they work with dynamic CSS variables
+    async function renderStories(searchTerm = '') { /* same as previous but theme-aware */ 
+      const content = document.getElementById("main-content");
+      content.innerHTML = `
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 md:mb-8">
+          <h1 class="text-2xl md:text-4xl font-bold" style="color: var(--text);">সব চটি গল্প 🔥</h1>
+          <select id="category-filter" onchange="filterByCategory(this.value)" class="rounded-2xl px-5 py-2.5 text-sm w-full sm:w-64 focus:ring-1" style="background-color: var(--input-bg); border: 1px solid var(--border); color: var(--text);">
+            <option value="">সব ক্যাটাগরি ও ট্যাগ</option>
+          </select>
+        </div>
+        <div id="stories-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6"></div>
+      `;
+      const select = document.getElementById("category-filter");
+      allCategories.forEach(cat => { const opt = document.createElement("option"); opt.value = cat; opt.textContent = cat; select.appendChild(opt); });
+      select.value = currentCategoryFilter;
+      const grid = document.getElementById("stories-grid");
+      grid.innerHTML = `<div class="col-span-3 py-16 text-center"><i class="fas fa-spinner fa-pulse"></i> লোড হচ্ছে...</div>`;
+      try {
+        const snapshot = await db.collection("stories").orderBy("createdAt", "desc").get();
+        let stories = [];
+        const term = (searchTerm || "").toLowerCase().trim();
+        const filterValue = currentCategoryFilter;
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          let matches = false;
+          if (term && data.title && data.title.toLowerCase().includes(term)) matches = true;
+          if (filterValue) { if (data.category === filterValue) matches = true; if (data.tags && data.tags.some(tag => tag === filterValue)) matches = true; }
+          else if (!term) matches = true;
+          if (matches) stories.push(doc);
+        });
+        grid.innerHTML = "";
+        if (stories.length === 0) { grid.innerHTML = `<p class="col-span-3 text-center py-20" style="color: var(--text2);">কোনো গল্প পাওয়া যায়নি</p>`; return; }
+        stories.forEach(doc => createStoryCard(doc, grid));
+      } catch (e) { grid.innerHTML = `<p class="col-span-3 text-center py-20" style="color: var(--accent);">গল্প লোড করতে সমস্যা হয়েছে</p>`; }
+    }
+    
+    function filterByCategory(cat) { currentCategoryFilter = cat; const searchTerm = document.getElementById("search-input")?.value.trim() || ''; renderStories(searchTerm); }
+    
+    async function readStory(id) {
+      currentStoryId = id;
+      try {
+        const docSnap = await db.collection("stories").doc(id).get();
+        const story = docSnap.data();
+        document.getElementById("modal-title").textContent = story.title;
+        document.getElementById("modal-author").innerHTML = `<i class="fas fa-user-astronaut"></i> Anonymous • ${story.category || ''} ${story.tags?.length ? '• ' + story.tags.join(', ') : ''}`;
+        document.getElementById("modal-content").innerHTML = (story.content || "").replace(/\n/g, '<br><br>');
+        document.getElementById("story-modal").classList.remove("hidden");
+        document.getElementById("story-modal").classList.add("flex");
+        await db.collection("stories").doc(id).update({ views: firebase.firestore.FieldValue.increment(1) }).catch(() => {});
+        updateFavButton();
+        loadComments();
+      } catch (e) { showToast("গল্প খুলতে সমস্যা হয়েছে", "error"); }
+    }
+    function hideStoryModal() { document.getElementById("story-modal").classList.add("hidden"); document.getElementById("story-modal").classList.remove("flex"); }
+    async function postComment() {
+      const text = document.getElementById("comment-input").value.trim();
+      if (!text || !currentStoryId) return showToast("মন্তব্য লিখুন", "error");
+      try {
+        await db.collection("stories").doc(currentStoryId).collection("comments").add({ text, author: "Anonymous", createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+        document.getElementById("comment-input").value = "";
+        showToast("মন্তব্য পোস্ট হয়েছে!", "success");
+        loadComments();
+      } catch (e) { showToast("মন্তব্য পোস্ট করতে সমস্যা হয়েছে", "error"); }
+    }
+    async function loadComments() {
+      const list = document.getElementById("comments-list");
+      if (!currentStoryId) return;
+      list.innerHTML = "<div class='text-center py-6'><i class='fas fa-spinner fa-pulse'></i> লোড...</div>";
+      try {
+        const snapshot = await db.collection("stories").doc(currentStoryId).collection("comments").orderBy("createdAt", "desc").get();
+        list.innerHTML = "";
+        if (snapshot.empty) { list.innerHTML = "<p class='text-center py-8 text-sm' style='color: var(--text2);'>এখনো কোনো মন্তব্য নেই। প্রথম মন্তব্য করুন!</p>"; return; }
+        snapshot.forEach(doc => {
+          const c = doc.data();
+          const div = document.createElement("div"); div.className = "p-4 rounded-xl"; div.style.backgroundColor = "var(--input-bg)";
+          div.innerHTML = `<p style="color: var(--text);" class="text-sm">${c.text}</p><p class="text-[11px] mt-2" style="color: var(--text2);">— Anonymous</p>`;
+          list.appendChild(div);
+        });
+      } catch (e) { list.innerHTML = "<p class='text-center' style='color: var(--accent);'>মন্তব্য লোড করতে সমস্যা হয়েছে</p>"; }
+    }
+    
+    async function renderFavorites() { /* similar theme */ 
+      const content = document.getElementById("main-content");
+      content.innerHTML = `<h1 class="text-2xl md:text-4xl font-bold mb-6 flex items-center gap-3" style="color: var(--text);"><i class="fas fa-heart" style="color: var(--accent);"></i> সেভ করা গল্প</h1><div id="fav-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6"></div>`;
+      const favIds = getFavorites();
+      const grid = document.getElementById("fav-grid");
+      if (favIds.length === 0) { grid.innerHTML = `<p class="col-span-3 text-center py-20" style="color: var(--text2);">এখনো কোনো গল্প সেভ করা হয়নি ❤️</p>`; return; }
+      grid.innerHTML = `<div class="col-span-3 text-center py-16"><i class="fas fa-spinner fa-pulse"></i> লোড...</div>`;
+      const validDocs = [];
+      for (let id of favIds) {
+        const doc = await db.collection("stories").doc(id).get();
+        if (doc.exists) validDocs.push(doc);
+      }
+      grid.innerHTML = "";
+      if (validDocs.length === 0) { grid.innerHTML = `<p class="col-span-3 text-center py-20" style="color: var(--text2);">সেভ করা গল্প আর পাওয়া যাচ্ছে না</p>`; return; }
+      validDocs.forEach(doc => createStoryCard(doc, grid));
+    }
+    
+    function renderCreateForm() {
+      const savedTitle = localStorage.getItem("draft_title") || "";
+      const savedContent = localStorage.getItem("draft_content") || "";
+      let tagsHTML = '';
+      allCategories.forEach(cat => { tagsHTML += `<label class="flex items-center gap-3 px-3 py-2 rounded-xl cursor-pointer text-sm" style="background-color: var(--input-bg);"><input type="checkbox" value="${cat}" class="w-4 h-4 accent-red-600"><span style="color: var(--text);">${cat}</span></label>`; });
+      document.getElementById("main-content").innerHTML = `
+        <div class="max-w-2xl mx-auto rounded-2xl md:rounded-3xl p-5 md:p-8 shadow-2xl" style="background-color: var(--surface);">
+          <h2 class="text-2xl md:text-3xl font-bold mb-6" style="color: var(--text);">✨ নতুন চটি গল্প লিখুন</h2>
+          <input id="story-title" value="${savedTitle.replace(/"/g, '&quot;')}" placeholder="গল্পের শিরোনাম" class="w-full rounded-xl px-5 py-4 mb-5 text-base focus:ring-2" style="background-color: var(--input-bg); border: 1px solid var(--border); color: var(--text);">
+          <select id="story-category" class="w-full rounded-xl px-5 py-4 mb-5 text-sm" style="background-color: var(--input-bg); border: 1px solid var(--border); color: var(--text);"><option value="">মূল ক্যাটাগরি সিলেক্ট করুন</option>${allCategories.map(c => `<option value="${c}">${c}</option>`).join('')}</select>
+          <div class="mb-6"><label class="block text-sm mb-2" style="color: var(--text2);">অতিরিক্ত ট্যাগ (একাধিক সিলেক্ট করুন)</label><div class="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-60 overflow-y-auto p-2 rounded-2xl" style="background-color: var(--bg);">${tagsHTML}</div></div>
+          <textarea id="story-content" rows="12" placeholder="এখানে পুরো গল্প লিখুন..." class="w-full rounded-xl px-5 py-4 mb-6" style="background-color: var(--input-bg); border: 1px solid var(--border); color: var(--text);">${savedContent}</textarea>
+          <button onclick="publishStory()" class="w-full py-4 rounded-xl text-lg font-bold transition active:scale-98" style="background-color: var(--accent); color: white;">প্রকাশ করুন 🚀</button>
+        </div>`;
+      document.getElementById("story-title").addEventListener("input", saveDraft);
+      document.getElementById("story-content").addEventListener("input", saveDraft);
+    }
+    function saveDraft() { localStorage.setItem("draft_title", document.getElementById("story-title")?.value || ""); localStorage.setItem("draft_content", document.getElementById("story-content")?.value || ""); }
+    async function publishStory() {
+      const title = document.getElementById("story-title").value.trim();
+      const content = document.getElementById("story-content").value.trim();
+      const category = document.getElementById("story-category").value;
+      const checkedTags = Array.from(document.querySelectorAll('#main-content input[type="checkbox"]:checked')).map(cb => cb.value);
+      if (!title || !content || !category) return showToast("শিরোনাম, মূল ক্যাটাগরি ও গল্প লিখুন", "error");
+      try {
+        await db.collection("stories").add({ title, content, category, tags: checkedTags, authorName: "Anonymous", views: 0, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+        showToast("🎉 গল্প প্রকাশিত হয়েছে!", "success");
+        localStorage.removeItem("draft_title"); localStorage.removeItem("draft_content");
+        navigateTo("stories");
+      } catch (e) { showToast("প্রকাশ করতে সমস্যা হয়েছে", "error"); }
+    }
+    
+    function checkAdminAccess() {
+      if (window.location.hash === "#admin") {
+        const pass = prompt("Admin Password দিন:");
+        if (pass === ADMIN_PASSWORD) showAdminPanel();
+        else { showToast("ভুল পাসওয়ার্ড!", "error"); window.location.hash = ''; }
+      }
+    }
+    
+    async function showAdminPanel() {
+      const content = document.getElementById("main-content");
+      content.innerHTML = `<h1 class="text-3xl md:text-4xl font-bold mb-6 flex items-center gap-3" style="color: var(--text);"><i class="fas fa-user-shield" style="color: var(--accent);"></i> Admin Panel</h1><div id="admin-grid" class="space-y-4"></div>`;
+      try {
+        const snapshot = await db.collection("stories").orderBy("createdAt", "desc").get();
+        const grid = document.getElementById("admin-grid");
+        grid.innerHTML = "";
+        snapshot.forEach(doc => {
+          const s = doc.data();
+          const div = document.createElement("div");
+          div.className = "p-5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border";
+          div.style.backgroundColor = "var(--surface)";
+          div.style.borderColor = "var(--border)";
+          div.innerHTML = `
+            <div class="flex-1">
+              <h3 class="font-bold text-lg" style="color: var(--text);">${s.title}</h3>
+              <p style="color: var(--text2);" class="text-sm">${s.category || 'ক্যাটাগরি নেই'} | ভিউ: ${s.views || 0}</p>
+              <p class="text-xs truncate max-w-md" style="color: var(--text2);">${(s.content || '').substring(0, 80)}...</p>
+            </div>
+            <button onclick="deleteStory('${doc.id}')" class="px-6 py-2 rounded-xl text-sm font-semibold transition" style="background-color: var(--accent); color: white;">ডিলিট</button>
+          `;
+          grid.appendChild(div);
+        });
+        if (snapshot.empty) grid.innerHTML = `<p class="text-center py-20" style="color: var(--text2);">কোনো গল্প নেই</p>`;
+      } catch (e) { showToast("Admin Panel লোড করতে সমস্যা", "error"); }
+    }
+    
+    async function deleteStory(id) {
+      if (confirm("এই গল্প স্থায়ীভাবে ডিলিট করবেন?")) {
+        try {
+          await db.collection("stories").doc(id).delete();
+          showToast("গল্প ডিলিট হয়েছে", "success");
+          if (window.location.hash === "#admin") showAdminPanel();
+          else navigateTo('stories');
+        } catch (e) { showToast("ডিলিট করতে সমস্যা হয়েছে", "error"); }
+      }
+    }
+    
+    function debounce(fn, delay) { let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), delay); }; }
+    
+    window.onload = () => {
+      loadTheme();
+      navigateTo('home');
+      if (window.location.hash === "#admin") checkAdminAccess();
+      window.addEventListener('hashchange', checkAdminAccess);
+      const searchInput = document.getElementById("search-input");
+      if (searchInput) searchInput.addEventListener('input', debounce((e) => { if (document.getElementById("stories-grid")) renderStories(e.target.value.trim()); }, 500));
+    };
+  </script>
+</body>
+</html>
