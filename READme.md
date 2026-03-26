@@ -1,7 +1,7 @@
 
 <div align="center">
 
-  <img src="https://via.placeholder.com/1200x300/7f1d1d/ffffff?text=StoryWeave" alt="StoryWeave Banner" width="100%">
+  <img src="logo.png" alt="StoryWeave Banner" width="100%">
 
   <h1>🔥 StoryWeave</h1>
   <p><strong>বাংলা চটি গল্পের সেরা প্ল্যাটফর্ম</strong></p>
